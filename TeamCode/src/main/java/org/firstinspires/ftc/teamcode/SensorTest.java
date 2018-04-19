@@ -125,6 +125,8 @@ public class SensorTest extends OpMode
         telemetry.addData("Distance (inch)", glyphMechanism.distanceSensor.getDistance(DistanceUnit.INCH));
         telemetry.addData("Jewel X", jewelArm.xServo.getPosition());
         telemetry.addData("Jewel Y", jewelArm.yServo.getPosition());
+        telemetry.addData("Flip Servo L", glyphMechanism.liftLeftServo.getPosition());
+        telemetry.addData("Flip Servo R", glyphMechanism.liftRightServo.getPosition());
         telemetry.addData("Relic Ext", relicArm.relicExtension.getCurrentPosition());
         telemetry.addData("Hand", relicArm.hand.getPosition());
         telemetry.addData("Wrist", relicArm.wrist.getPosition());
