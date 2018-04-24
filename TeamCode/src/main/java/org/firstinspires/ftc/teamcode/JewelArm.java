@@ -16,10 +16,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class JewelArm {
 
     private double armUp = 0.9;
-    private double armDown = 0.3;
-    private double hitForPos = 0.3;
-    private double hitNeutralPos = 0.5;
-    private double hitBackPos = 0.7;
+    private double armDown = 0.46;
+    private double hitForPos = 0.36;
+    private double hitNeutralPos = 0.46;
+    private double hitBackPos = 0.56;
+    private double xStore = 0.9;
 
     public Servo xServo;
     public Servo yServo;
@@ -29,7 +30,8 @@ public class JewelArm {
     public JewelArm(HardwareMap hardwareMap){
         xServo = hardwareMap.get(Servo.class, RobotMap.jewelServoX);
         yServo = hardwareMap.get(Servo.class, RobotMap.jewelServoY);
-        colorSensor = hardwareMap.get(ColorSensor.class, "jewel_color_sensor");
+        colorSensor = hardwareMap.get(ColorSensor.class, RobotMap.jewelSensor);
+        colorSensor.enableLed(false);
     }
 
     public void lower(){
@@ -56,7 +58,12 @@ public class JewelArm {
 
     public void raise(){
         xServo.setPosition(hitNeutralPos);
+        yServo.setPosition(armUp - .1);
+    }
+
+    public void store(){
         yServo.setPosition(armUp);
+        xServo.setPosition(xStore);
     }
 
 }

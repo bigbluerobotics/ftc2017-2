@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -14,8 +15,7 @@ public class MecanumDrive {
     public DcMotor leftRear = null;
     public DcMotor rightFront = null;
     public DcMotor rightRear = null;
-
-    private final double ticksPerInch = 140;//1120 * 20 / (4 * Math.PI);
+    private final double ticksPerInch = 140 / Math.PI;//1120 * 20 / (4 * Math.PI);
 
     public BNO055IMU imu;
 
@@ -29,6 +29,13 @@ public class MecanumDrive {
         leftRear = hardwareMap.get(DcMotor.class, RobotMap.leftRearMotor);
         rightFront = hardwareMap.get(DcMotor.class, RobotMap.rightFrontMotor);
         rightRear = hardwareMap.get(DcMotor.class, RobotMap.rightRearMotor);
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+
+        imu = hardwareMap.get(BNO055IMU.class, RobotMap.imu);
+        imu.initialize(parameters);
 
         resetEncoders();
 
@@ -57,6 +64,11 @@ public class MecanumDrive {
      */
     @Deprecated
     public void rawMove(double leftFrontPower, double rightFrontPower, double leftRearPower, double rightRearPower){
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         leftFront.setPower(leftFrontPower);
         rightFront.setPower(rightFrontPower);
         leftRear.setPower(leftRearPower);
@@ -87,6 +99,13 @@ public class MecanumDrive {
         rightFront.setPower(power);
         leftRear.setPower(power);
         rightRear.setPower(power);
+    }
+
+    public void brake(){
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        leftRear.setPower(0);
+        rightRear.setPower(0);
     }
 
     /**
@@ -130,7 +149,7 @@ public class MecanumDrive {
 
         resetEncoders();
 
-        double inches = degrees/180 * Math.PI * 11.5;
+        double inches = degrees/180 * Math.PI * 13.5;
         int leftFrontTarget = (int) (leftFront.getCurrentPosition() - (inches * 140 / Math.PI));
         int leftRearTarget = (int) (leftRear.getCurrentPosition() - (inches * 140 / Math.PI));
         int rightFrontTarget = (int) (rightFront.getCurrentPosition() + (inches * 140 / Math.PI));
@@ -147,20 +166,19 @@ public class MecanumDrive {
         rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         if(turnRight){
-            leftFront.setPower(-power);
-            leftRear.setPower(-power);
-            rightFront.setPower(power);
-            rightRear.setPower(power);
-        }else{
             leftFront.setPower(power);
             leftRear.setPower(power);
             rightFront.setPower(-power);
             rightRear.setPower(-power);
+        }else{
+            leftFront.setPower(-power);
+            leftRear.setPower(-power);
+            rightFront.setPower(power);
+            rightRear.setPower(power);
         }
     }
 
     public void gyroTurn(double angle, double power){
-        boolean turnRight = angle > 0;
         power = Math.abs(power);
 
         double gyroAngle = getGyroAngle();
@@ -176,7 +194,7 @@ public class MecanumDrive {
      * @return whether or not any of the 4 drive encoders is busy
      */
     public boolean encoderDone(){
-        return !(leftFront.isBusy() || leftRear.isBusy() || rightFront.isBusy() || rightRear.isBusy());
+        return ((leftFront.isBusy()?1:0) + (leftRear.isBusy()?1:0) + (rightFront.isBusy()?1:0) + (rightRear.isBusy()?1:0))<= 1;
     }
 
     /**
@@ -212,8 +230,10 @@ public class MecanumDrive {
 
         //Update the rotational goal to compensate for how off we are from the goal.
         //Dividing by 300 to convert the degrees per second into power for a motor. We found that about 300 degrees per second is a 1 in turning power.
-        //The 1.5x is a multiplier to make sure the offset is applied enough to have an actual effect.
-        rotation += (averageGoal - averageVelocity/180.0)*1.5;
+        //The 1.5x is a multiplier to make sure the offset is applied 2enough to have an actual effect.
+
+        //Commented for now to make drivable (find a new value instead of 300.0 and then uncomment to enable)
+        rotation += (averageGoal - averageVelocity/120.0)*1.0;
 
 
         direction += Math.PI/4.0;  //Strafe direction needs to be offset so that forwards has everything go at the same power

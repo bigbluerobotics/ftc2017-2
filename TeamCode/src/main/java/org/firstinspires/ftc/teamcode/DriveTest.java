@@ -97,7 +97,9 @@ public class DriveTest extends OpMode
      */
     @Override
     public void loop() {
-        if(gamepad1.y) {
+
+        mecanumDrive.gyroTurn(90, 0.5);
+        /*if(gamepad1.y) {
             offsetAngle = 0;
         }else if(gamepad1.x){
             offsetAngle = 90;
@@ -117,19 +119,19 @@ public class DriveTest extends OpMode
             direction += offsetAngle;
             mecanumDrive.drive(direction/360*2*Math.PI, 0, 0.35);
         } else {
-            double speed = 0.6;
+            double speed = 0.9;
             if(gamepad1.right_trigger > 0.5){
                 speed += (1-speed)*(2*(gamepad1.right_trigger - 0.5));
             }
             double magnitude = Math.hypot(-gamepad1.left_stick_x, gamepad1.left_stick_y);
-            double robotAngle = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+            double robotAngle = Math.atan2(gamepad1.left_stick_x, gamepad1.left_stick_y);
             telemetry.addData("robot angle", robotAngle);
             robotAngle += offsetAngle / 180.0 * Math.PI;
             double rightX = -gamepad1.right_stick_x;
             mecanumDrive.drive(robotAngle, speed * magnitude, rightX);
         }
 
-        logEverything();
+        logEverything();*/
     }
 
     public void logEverything(){

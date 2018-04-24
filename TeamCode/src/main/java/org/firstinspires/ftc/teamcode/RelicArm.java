@@ -9,11 +9,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  */
 
 public class RelicArm {
+    private double pushSpeed = 1.0;
+    private double pullSpeed = 1.0;
+
     private double open = 0.5;
     private double closed = 0.9;
     private double wristUp = 0.1;
     private double wristDown = 0.64;
-    private double motorPower = 0.75;
+
     public boolean isHandOpen = false;
     public boolean isWristUp = false;
 
@@ -31,15 +34,21 @@ public class RelicArm {
 
         relicExtension.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
+    public void push(){this.push(pushSpeed);}
+    public void pull(){this.pull(pullSpeed);}
+
     public void push(double speed){
-        relicExtension.setPower(motorPower*speed);
+        relicExtension.setPower(speed);
     }
     public void pull(double speed){
-        relicExtension.setPower(-motorPower*speed);
+        relicExtension.setPower(-speed);
     }
+
     public void stop(){
         relicExtension.setPower(0);
     }
+
     public void grab(){
         hand.setPosition(closed);
         isHandOpen = false;

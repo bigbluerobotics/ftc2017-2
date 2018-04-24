@@ -31,12 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -52,8 +47,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Testing")
-public class SensorTest extends OpMode
+@TeleOp(name="Main")
+public class DriveMain extends OpMode
 {
     public String startDate;
     public ElapsedTime runtime = new ElapsedTime();
@@ -71,15 +66,15 @@ public class SensorTest extends OpMode
     @Override
     public void init() {
         telemetry.addData("Status", "Starting...");
-
-        relicArm = new RelicArm(hardwareMap);
         mecanumDrive = new MecanumDrive(hardwareMap);
-        glyphMechanism = new GlyphMechanism(hardwareMap);
         jewelArm = new JewelArm(hardwareMap);
+        relicArm = new RelicArm(hardwareMap);
+        glyphMechanism = new GlyphMechanism(hardwareMap);
 
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
+        telemetry.update();
     }
 
 
@@ -104,34 +99,80 @@ public class SensorTest extends OpMode
      */
     @Override
     public void loop() {
+        if(gamepad1.right_trigger > 0.3 || gamepad2.right_trigger > 0.3){
+            glyphMechanism.collect();
+        }else if(gamepad1.left_trigger > 0.3 || gamepad2.left_trigger > 0.3) {
+            glyphMechanism.eject();
+        }else{
+            glyphMechanism.stopCollect();
+        }
+
+        if(gamepad2.a){
+            glyphMechanism.grabBottom();
+        }else if(gamepad2.b){
+            glyphMechanism.releaseBottom();
+        }else if(gamepad2.x){
+            glyphMechanism.grabTop();
+        }else if(gamepad2.y){
+            glyphMechanism.releaseTop();
+        }
+
+        if(gamepad2.dpad_up){
+            glyphMechanism.moveUp();
+        }else if(gamepad2.dpad_down) {
+            glyphMechanism.moveDown();
+        }else{
+            glyphMechanism.stopRaise();
+        }
+
+        if(gamepad2.right_bumper){
+            glyphMechanism.flipUp();
+        }else if(gamepad2.left_bumper){
+            glyphMechanism.flipDown();
+        }
+
+        if(gamepad1.y) {
+            offsetAngle = 0;
+        }else if(gamepad1.x){
+            offsetAngle = 90;
+        }else if(gamepad1.a){
+            offsetAngle = 180;
+        }else if(gamepad1.b){
+            offsetAngle = 270;
+        }
+
+        if(gamepad1.dpad_up || gamepad1.dpad_left || gamepad1.dpad_down ||gamepad1.dpad_right){
+            double direction = (gamepad1.dpad_up?0:0) + (gamepad1.dpad_left?90:0) + (gamepad1.dpad_down?180:0) + (gamepad1.dpad_right?270:0);
+            int mag = (gamepad1.dpad_up?1:0) + (gamepad1.dpad_left?1:0) + (gamepad1.dpad_down?1:0) + (gamepad1.dpad_right?1:0);
+
+            if (mag != 0) direction /= mag;
+            direction -= 135;
+            direction += offsetAngle;
+            mecanumDrive.drive(direction/360*2*Math.PI, 0, 0.35);
+        } else {
+            double speed = 0.9;
+            if(gamepad1.right_trigger > 0.5){
+                speed += (1-speed)*(2*(gamepad1.right_trigger - 0.5));
+            }
+            double magnitude = Math.hypot(-gamepad1.left_stick_x, gamepad1.left_stick_y);
+            double robotAngle = Math.atan2(gamepad1.left_stick_x, gamepad1.left_stick_y);
+            telemetry.addData("robot angle", robotAngle);
+            robotAngle += offsetAngle / 180.0 * Math.PI;
+            double rightX = -gamepad1.right_stick_x;
+            mecanumDrive.drive(robotAngle, speed * magnitude, rightX);
+        }
+
+        jewelArm.store();
+
         logEverything();
     }
 
     public void logEverything(){
         telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Angle 1", mecanumDrive.imu.getAngularOrientation().firstAngle);
-        telemetry.addData("Angle 2", mecanumDrive.imu.getAngularOrientation().secondAngle);
-        telemetry.addData("Angle 3", mecanumDrive.imu.getAngularOrientation().thirdAngle);
-        telemetry.addData("X Pos", mecanumDrive.imu.getPosition().x);
-        telemetry.addData("Y Pos", mecanumDrive.imu.getPosition().y);
-        telemetry.addData("Z Pos", mecanumDrive.imu.getPosition().z);
-        telemetry.addData("Jewel Red", jewelArm.colorSensor.red());
-        telemetry.addData("Jewel Blue", jewelArm.colorSensor.blue());
         telemetry.addData("Drive LF", mecanumDrive.leftFront.getCurrentPosition());
         telemetry.addData("Drive RF", mecanumDrive.rightFront.getCurrentPosition());
         telemetry.addData("Drive LR", mecanumDrive.leftRear.getCurrentPosition());
         telemetry.addData("Drive RR", mecanumDrive.rightRear.getCurrentPosition());
-        telemetry.addData("Distance (inch)", glyphMechanism.distanceSensor.getDistance(DistanceUnit.INCH));
-        telemetry.addData("Jewel X", jewelArm.xServo.getPosition());
-        telemetry.addData("Jewel Y", jewelArm.yServo.getPosition());
-        telemetry.addData("Flip Servo L", glyphMechanism.liftLeftServo.getPosition());
-        telemetry.addData("Flip Servo R", glyphMechanism.liftRightServo.getPosition());
-        //telemetry.addData("Relic Ext", relicArm.relicExtension.getCurrentPosition());
-        //telemetry.addData("Hand", relicArm.hand.getPosition());
-        //telemetry.addData("Wrist", relicArm.wrist.getPosition());
-        telemetry.addData("Grab Top", glyphMechanism.grabTopServo.getPosition());
-        telemetry.addData("Grab Bot", glyphMechanism.grabBottomServo.getPosition());
-
 
         telemetry.update();
     }

@@ -31,29 +31,13 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-/**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
-
-@TeleOp(name="Testing")
-public class SensorTest extends OpMode
+@TeleOp(name="Servo Testing")
+public class ServoTest extends OpMode
 {
     public String startDate;
     public ElapsedTime runtime = new ElapsedTime();
@@ -64,6 +48,10 @@ public class SensorTest extends OpMode
     private GlyphMechanism glyphMechanism = null;
     private JewelArm jewelArm = null;
     private int offsetAngle = 0;
+    private double curPosition;
+    private boolean pressed = true;
+
+    private Servo testServo = null;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -97,6 +85,8 @@ public class SensorTest extends OpMode
     @Override
     public void start() {
         runtime.reset();
+        curPosition = 0.5;
+        testServo = glyphMechanism.grabBottomServo;
     }
 
     /*
@@ -104,35 +94,38 @@ public class SensorTest extends OpMode
      */
     @Override
     public void loop() {
-        logEverything();
-    }
+        if(gamepad1.dpad_up){
+            testServo = glyphMechanism.grabTopServo;
+            curPosition = 0.5;
+        }else if(gamepad1.dpad_down) {
+            testServo = glyphMechanism.grabBottomServo;
+            curPosition = 0.5;
+        }else if(gamepad1.dpad_left){
+            testServo = jewelArm.xServo;
+            curPosition = 0.5;
+        }else if(gamepad1.dpad_right){
+            testServo = jewelArm.yServo;
+            curPosition = 0.5;
+        }
+        //glyphMechanism.liftLeftServo.setPosition(0.39)
+        if(gamepad1.a) {
+            if(!pressed) curPosition += 0.1;
+            pressed = true;
+        }else if(gamepad1.b){
+            if(!pressed) curPosition -= 0.1;
+            pressed = true;
+        }else if(gamepad1.x){
+            if(!pressed) curPosition += 0.01;
+            pressed = true;
+        }else if(gamepad1.y){
+            if(!pressed) curPosition -= 0.01;
+            pressed = true;
+        }else{
+            pressed = false;
+        }
 
-    public void logEverything(){
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Angle 1", mecanumDrive.imu.getAngularOrientation().firstAngle);
-        telemetry.addData("Angle 2", mecanumDrive.imu.getAngularOrientation().secondAngle);
-        telemetry.addData("Angle 3", mecanumDrive.imu.getAngularOrientation().thirdAngle);
-        telemetry.addData("X Pos", mecanumDrive.imu.getPosition().x);
-        telemetry.addData("Y Pos", mecanumDrive.imu.getPosition().y);
-        telemetry.addData("Z Pos", mecanumDrive.imu.getPosition().z);
-        telemetry.addData("Jewel Red", jewelArm.colorSensor.red());
-        telemetry.addData("Jewel Blue", jewelArm.colorSensor.blue());
-        telemetry.addData("Drive LF", mecanumDrive.leftFront.getCurrentPosition());
-        telemetry.addData("Drive RF", mecanumDrive.rightFront.getCurrentPosition());
-        telemetry.addData("Drive LR", mecanumDrive.leftRear.getCurrentPosition());
-        telemetry.addData("Drive RR", mecanumDrive.rightRear.getCurrentPosition());
-        telemetry.addData("Distance (inch)", glyphMechanism.distanceSensor.getDistance(DistanceUnit.INCH));
-        telemetry.addData("Jewel X", jewelArm.xServo.getPosition());
-        telemetry.addData("Jewel Y", jewelArm.yServo.getPosition());
-        telemetry.addData("Flip Servo L", glyphMechanism.liftLeftServo.getPosition());
-        telemetry.addData("Flip Servo R", glyphMechanism.liftRightServo.getPosition());
-        //telemetry.addData("Relic Ext", relicArm.relicExtension.getCurrentPosition());
-        //telemetry.addData("Hand", relicArm.hand.getPosition());
-        //telemetry.addData("Wrist", relicArm.wrist.getPosition());
-        telemetry.addData("Grab Top", glyphMechanism.grabTopServo.getPosition());
-        telemetry.addData("Grab Bot", glyphMechanism.grabBottomServo.getPosition());
-
-
+        testServo.setPosition(curPosition);
+        telemetry.addData("posiiton", curPosition);
         telemetry.update();
     }
 
